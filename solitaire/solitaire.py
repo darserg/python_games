@@ -29,7 +29,8 @@ FONT = SMALL = BIG = None
 
 
 class Card:
-    __slots__ = ("suit", "rank", "up")   # масти: 0 пики, 1 трефы, 2 червы, 3 бубны
+    # масти: 0 пики, 1 трефы, 2 червы, 3 бубны
+    __slots__ = ("suit", "rank", "up")
 
     def __init__(self, suit, rank, up=False):
         self.suit, self.rank, self.up = suit, rank, up
@@ -64,7 +65,7 @@ def can_found(card, pile):
 
 
 def draw_suit(s, suit, cx, cy, z, col):
-    i = lambda v: int(round(v))
+    def i(v): return int(round(v))
     d = pygame.draw
     if suit in (0, 2):  # пики / червы
         sign = -1 if suit == 0 else 1
@@ -72,12 +73,15 @@ def draw_suit(s, suit, cx, cy, z, col):
         for dx in (-0.25, 0.25):
             d.circle(s, col, (i(cx + dx * z), i(cyc)), i(z * 0.28))
         if suit == 2:
-            d.polygon(s, col, [(i(cx - .5 * z), i(cy - .05 * z)), (i(cx + .5 * z), i(cy - .05 * z)),
+            d.polygon(s, col, [(i(cx - .5 * z), i(cy - .05 * z)),
+                               (i(cx + .5 * z), i(cy - .05 * z)),
                                (cx, i(cy + .55 * z))])
         else:
-            d.polygon(s, col, [(i(cx - .5 * z), i(cy + .05 * z)), (i(cx + .5 * z), i(cy + .05 * z)),
+            d.polygon(s, col, [(i(cx - .5 * z), i(cy + .05 * z)),
+                               (i(cx + .5 * z), i(cy + .05 * z)),
                                (cx, i(cy - .55 * z))])
-            d.polygon(s, col, [(cx, i(cy + .1 * z)), (i(cx - .2 * z), i(cy + .55 * z)),
+            d.polygon(s, col, [(cx, i(cy + .1 * z)),
+                               (i(cx - .2 * z), i(cy + .55 * z)),
                                (i(cx + .2 * z), i(cy + .55 * z))])
     elif suit == 3:     # бубны
         d.polygon(s, col, [(cx, i(cy - .55 * z)), (i(cx + .4 * z), cy),
@@ -85,14 +89,16 @@ def draw_suit(s, suit, cx, cy, z, col):
     else:               # трефы
         for dx, dy in ((0, -.25), (-.27, .12), (.27, .12)):
             d.circle(s, col, (i(cx + dx * z), i(cy + dy * z)), i(z * 0.25))
-        d.polygon(s, col, [(cx, i(cy)), (i(cx - .2 * z), i(cy + .55 * z)), (i(cx + .2 * z), i(cy + .55 * z))])
+        d.polygon(s, col, [(cx, i(cy)), (i(cx - .2 * z),
+                  i(cy + .55 * z)), (i(cx + .2 * z), i(cy + .55 * z))])
 
 
 def draw_card(s, card, x, y):
     r = pygame.Rect(x, y, CW, CH)
     if not card.up:
         pygame.draw.rect(s, (40, 70, 160), r, border_radius=8)
-        pygame.draw.rect(s, (225, 230, 245), r.inflate(-14, -14), 2, border_radius=6)
+        pygame.draw.rect(s, (225, 230, 245),
+                         r.inflate(-14, -14), 2, border_radius=6)
         pygame.draw.rect(s, WHITE, r, 2, border_radius=8)
         return
     pygame.draw.rect(s, (252, 252, 247), r, border_radius=8)
@@ -189,7 +195,7 @@ class Game:
         return False
 
     def pick(self, pos):
-        R = lambda x, y: pygame.Rect(x, y, CW, CH).collidepoint(pos)
+        def R(x, y): return pygame.Rect(x, y, CW, CH).collidepoint(pos)
         if self.waste and R(self.waste_x(), TOP):
             return "waste", 0, len(self.waste) - 1
         for j in range(4):
@@ -219,7 +225,8 @@ class Game:
                 card.up = True
             return
         now = pygame.time.get_ticks()
-        dbl = button == 3 or (now - self.last_click < 350 and self.last_card is card)
+        dbl = button == 3 or (now - self.last_click <
+                              350 and self.last_card is card)
         self.last_click, self.last_card = now, card
         if dbl and idx == len(pile) - 1 and kind != "found" and self.auto_found(kind, i):
             return
@@ -232,7 +239,8 @@ class Game:
 
     def mouse_move(self, pos):
         if self.drag:
-            self.drag["x"], self.drag["y"] = pos[0] - self.drag["dx"], pos[1] - self.drag["dy"]
+            self.drag["x"], self.drag["y"] = pos[0] - \
+                self.drag["dx"], pos[1] - self.drag["dy"]
 
     def mouse_up(self):
         d = self.drag
@@ -244,7 +252,8 @@ class Game:
         cands = []
         for j in range(7):
             pile = self.tab[j]
-            t = pygame.Rect(col_x(j), tab_y(pile, max(len(pile) - 1, 0)), CW, CH)
+            t = pygame.Rect(col_x(j), tab_y(
+                pile, max(len(pile) - 1, 0)), CW, CH)
             o = rect.clip(t)
             if o.w * o.h > 0 and not (kind == "tab" and i == j) and can_tab(cards[0], pile):
                 cands.append((o.w * o.h, ("tab", j)))
@@ -266,13 +275,15 @@ class Game:
     # ---------- отрисовка ----------
     def render(self, s):
         s.fill(GREEN)
-        slot = lambda x, y: pygame.draw.rect(s, (15, 80, 45), (x, y, CW, CH), 2, border_radius=8)
+        def slot(x, y): return pygame.draw.rect(
+            s, (15, 80, 45), (x, y, CW, CH), 2, border_radius=8)
         # колода
         if self.stock:
             draw_card(s, Card(0, 1), col_x(0), TOP)
         else:
             slot(col_x(0), TOP)
-            pygame.draw.circle(s, (15, 80, 45), (col_x(0) + CW // 2, TOP + CH // 2), 22, 4)
+            pygame.draw.circle(s, (15, 80, 45), (col_x(
+                0) + CW // 2, TOP + CH // 2), 22, 4)
         # сброс
         slot(col_x(1), TOP)
         vis = self.waste[-3:] if self.draw == 3 else self.waste[-1:]
@@ -285,7 +296,8 @@ class Game:
                 draw_card(s, self.found[j][-1], col_x(3 + j), TOP)
             else:
                 t = BIG.render("A", True, (15, 80, 45))
-                s.blit(t, t.get_rect(center=(col_x(3 + j) + CW // 2, TOP + CH // 2)))
+                s.blit(t, t.get_rect(
+                    center=(col_x(3 + j) + CW // 2, TOP + CH // 2)))
         # стопки
         for i, pile in enumerate(self.tab):
             if not pile:
@@ -296,13 +308,14 @@ class Game:
             for k, c in enumerate(self.drag["cards"]):
                 draw_card(s, c, self.drag["x"], self.drag["y"] + k * UP_OFF)
         info = f"Ходы: {self.moves}   |   N - новая   U - отмена   D - режим: {self.draw} карт" \
-               f"{'а' if self.draw == 1 else 'ы'}   Esc - выход"
+            f"{'а' if self.draw == 1 else 'ы'}   Esc - выход"
         s.blit(SMALL.render(info, True, (220, 235, 225)), (X0, H - 32))
         if self.won:
             veil = pygame.Surface((W, H), pygame.SRCALPHA)
             veil.fill((0, 0, 0, 150))
             s.blit(veil, (0, 0))
-            t = BIG.render(f"Победа! Ходов: {self.moves}", True, (255, 230, 120))
+            t = BIG.render(f"Победа! Ходов: {
+                           self.moves}", True, (255, 230, 120))
             s.blit(t, t.get_rect(center=(W // 2, H // 2 - 14)))
             t = SMALL.render("Нажмите N для новой игры", True, WHITE)
             s.blit(t, t.get_rect(center=(W // 2, H // 2 + 30)))
